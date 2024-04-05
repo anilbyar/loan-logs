@@ -3,7 +3,7 @@ import { Button, Text, View } from 'react-native'
 export const HomeScreen = () => {
   return (
     <View>
-      <Text>HomeScreen for Atul Chaudhary</Text>
+      <Text>HomeScreen for Atul hello</Text>
     </View>
   )
 }
