@@ -18,8 +18,9 @@ export default function App() {
       <Stack.Navigator
       >
         <Stack.Screen
-          name = 'homescreen'
+          name = 'Home'
           component={HomeScreen}
+          options={{headerShown:false}}
         />
         <Stack.Screen
           name = 'login'
