@@ -8,6 +8,7 @@ import { LoginScreen } from './screens/LoginScreen';
 import { ChatScreen } from './screens/ChatScreen';
 import { AddPersonScreen } from './screens/AddPersonScreen';
 import { TransactionDetailScreen } from './screens/TransactionDetailScreen';
+import {SettleTransaction} from './screens/SettleTransaction'
 
 const Stack = createNativeStackNavigator();
 
@@ -41,6 +42,10 @@ export default function App() {
         <Stack.Screen
           name = 'transactiondetail'
           component={TransactionDetailScreen}
+        />
+        <Stack.Screen
+          name = 'settleTransaction'
+          component={SettleTransaction}
         />
       </Stack.Navigator>
     </NavigationContainer>

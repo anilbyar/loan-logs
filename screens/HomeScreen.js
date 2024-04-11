@@ -18,9 +18,12 @@ const DATA = [
     chat_id: 12312313,
     userIds: [4, 1],
     Net_amount: -1000,
+  },
+  {
+    chat_id: 12312310,
+    userIds: [5, 1],
+    Net_amount: -700,
   }
-
-
 
 ]
 
@@ -40,6 +43,10 @@ const UserList = [
   {
     userId: 4,
     userName: 'Kumar'
+  },
+  {
+    userId: 5,
+    userName: 'Subham'
   },
 
 
@@ -86,7 +93,7 @@ DATA.forEach((item) => {
     giveAmount += item.Net_amount
   }
 })
-export const HomeScreen = () => {
+export const HomeScreen = ({navigation}) => {
 
   return (
 
@@ -119,15 +126,16 @@ export const HomeScreen = () => {
         data={DATA}
         renderItem={({ item }) => <Item userIds={item.userIds} amount={item.Net_amount} />}
         keyExtractor={item => item.chat_id}
+        style={{height:'50%'}}
       />
 
       <View style={{width:'100%',flex:1,flexDirection:'row',marginBottom:10, justifyContent:'space-evenly',alignItems:'center'}}>
-        <TouchableOpacity style={{ width: '40%', backgroundColor: '#4A6BFF', height: 45, borderRadius: 10 }}>
+        <TouchableOpacity style={{ width: '40%', backgroundColor: '#398EEA', height: 45, borderRadius: 10,padding:5 }}>
 
-          <Text style={{ padding: 5, textAlign: 'center', color: 'black' }}>Settle Transactions</Text>
+          <Text style={{ padding: 5, textAlign: 'center', color: 'black' }} onPress={()=>navigation.navigate('settleTransaction')}>Settle Transactions</Text>
 
         </TouchableOpacity>
-        <TouchableOpacity style={{ width: '40%', backgroundColor: 'green', height: 45, borderRadius: 10}}>
+        <TouchableOpacity style={{ width: '40%', backgroundColor: 'green', height: 45, borderRadius: 10,padding:5}} onPress={()=>navigation.navigate('addperson')}>
 
           <Text style={{ padding: 5, textAlign: 'center', color: 'black'}}>Add Person</Text>
 
@@ -155,7 +163,7 @@ const styles = StyleSheet.create({
   bigContainer: {
     width: '100%',
     height: '20%',
-    backgroundColor: '#4A6BFF',
+    backgroundColor: '#398EEA',
     marginBottom: 20,
     justifyContent: 'center',
     alignItems: 'center'
