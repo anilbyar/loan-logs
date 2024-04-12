@@ -40,6 +40,13 @@ export default function App() {
         <Stack.Screen
           name = 'transactiondetail'
           component={TransactionDetailScreen}
+          options={{
+            title: 'Entry Details',
+            headerStyle: {
+              backgroundColor: '#001eff',
+            },
+            headerTintColor: '#fff',
+          }}
         />
       </Stack.Navigator>
     </NavigationContainer>
