@@ -8,6 +8,7 @@ import { LoginScreen } from './screens/LoginScreen';
 import { ChatScreen } from './screens/ChatScreen';
 import { AddPersonScreen } from './screens/AddPersonScreen';
 import { TransactionDetailScreen } from './screens/TransactionDetailScreen';
+import {SettleTransaction} from './screens/SettleTransaction'
 
 const Stack = createNativeStackNavigator();
 
@@ -18,8 +19,9 @@ export default function App() {
       <Stack.Navigator
       >
         <Stack.Screen
-          name = 'homescreen'
+          name = 'Home'
           component={HomeScreen}
+          options={{headerShown:false}}
         />
         <Stack.Screen
           name = 'login'
@@ -47,6 +49,10 @@ export default function App() {
             },
             headerTintColor: '#fff',
           }}
+        />
+        <Stack.Screen
+          name = 'settleTransaction'
+          component={SettleTransaction}
         />
       </Stack.Navigator>
     </NavigationContainer>

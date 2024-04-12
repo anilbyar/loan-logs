@@ -2,6 +2,6 @@ import { View } from "react-native"
 
 export const ChatScreen = () => {
   return (
-    <Text>ChatScreen</Text>
+    <Text>This is your chat screen</Text>
   )
 }
