@@ -8,6 +8,7 @@ import { LoginScreen } from './screens/LoginScreen';
 import { ChatScreen } from './screens/ChatScreen';
 import { AddPersonScreen } from './screens/AddPersonScreen';
 import { TransactionDetailScreen } from './screens/TransactionDetailScreen';
+import {SettleTransaction} from './screens/SettleTransaction'
 
 const Stack = createNativeStackNavigator();
 
@@ -19,14 +20,15 @@ export default function App() {
       >
         
         <Stack.Screen
-          name = 'homescreen'
-          component={HomeScreen}
-        />
-        <Stack.Screen
           name = 'login'
           component={LoginScreen}
         />
         
+        <Stack.Screen
+          name = 'home'
+          component={HomeScreen}
+          options={{headerShown:false}}
+        />
         <Stack.Screen
           name = 'chat'
           component={ChatScreen}
@@ -42,6 +44,17 @@ export default function App() {
         <Stack.Screen
           name = 'transactiondetail'
           component={TransactionDetailScreen}
+          options={{
+            title: 'Entry Details',
+            headerStyle: {
+              backgroundColor: '#001eff',
+            },
+            headerTintColor: '#fff',
+          }}
+        />
+        <Stack.Screen
+          name = 'settleTransaction'
+          component={SettleTransaction}
         />
       </Stack.Navigator>
     </NavigationContainer>
