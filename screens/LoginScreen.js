@@ -34,7 +34,7 @@ export const LoginScreen = ({navigation}) => {
   const verifyCode = () => {
     alert("Logged In");
     setid(null);
-    navigation.navigate('homescreen');
+    navigation.navigate('home');
   }
   return (
     <View style={styles.container}>

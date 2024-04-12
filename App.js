@@ -19,13 +19,13 @@ export default function App() {
       <Stack.Navigator
       >
         <Stack.Screen
-          name = 'Home'
-          component={HomeScreen}
-          options={{headerShown:false}}
-        />
-        <Stack.Screen
           name = 'login'
           component={LoginScreen}
+        />
+        <Stack.Screen
+          name = 'home'
+          component={HomeScreen}
+          options={{headerShown:false}}
         />
         <Stack.Screen
           name = 'chat'
