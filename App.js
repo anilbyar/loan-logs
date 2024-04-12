@@ -8,6 +8,7 @@ import { LoginScreen } from "./screens/LoginScreen";
 import { ChatScreen } from "./screens/ChatScreen";
 import { AddPersonScreen } from "./screens/AddPersonScreen";
 import { TransactionDetailScreen } from "./screens/TransactionDetailScreen";
+import { SettleTransaction } from "./screens/SettleTransaction";
 
 const Stack = createNativeStackNavigator();
 
@@ -15,21 +16,28 @@ export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator>
+        <Stack.Screen name="login" component={LoginScreen} />
+
         <Stack.Screen
-          name="HomeScreen"
+          name="home"
           component={HomeScreen}
-          options={{
-            title: "randi ko xoro",
-          }}
+          options={{ headerShown: false }}
         />
-        {/* <Stack.Screen name="login" component={LoginScreen} /> */}
-        {/* <Stack.Screen name="chat" component={ChatScreen} /> */}
-        <Stack.Screen name="AddTransaction" component={AddTransaction} />
-        {/* <Stack.Screen name="addperson" component={AddPersonScreen} /> */}
-        {/* <Stack.Screen
+        <Stack.Screen name="chat" component={ChatScreen} />
+        <Stack.Screen name="addtransaction" component={AddTransaction} />
+        <Stack.Screen name="addperson" component={AddPersonScreen} />
+        <Stack.Screen
           name="transactiondetail"
           component={TransactionDetailScreen}
-        /> */}
+          options={{
+            title: "Entry Details",
+            headerStyle: {
+              backgroundColor: "#001eff",
+            },
+            headerTintColor: "#fff",
+          }}
+        />
+        <Stack.Screen name="settleTransaction" component={SettleTransaction} />
       </Stack.Navigator>
     </NavigationContainer>
   );
