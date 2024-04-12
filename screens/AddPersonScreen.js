@@ -1,7 +1,9 @@
-import { View } from 'react-native'
+import { TextInput, View } from "react-native";
 
-export const AddPersonScreen = ({navigation}) => {
+export const AddPersonScreen = ({ navigation }) => {
   return (
-    <Text>AddPersonScreen</Text>
-  )
-}
+    <View>
+      <TextInput>hello</TextInput>
+    </View>
+  );
+};
