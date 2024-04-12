@@ -17,6 +17,7 @@ export default function App() {
     <NavigationContainer>
       <Stack.Navigator
       >
+        {/*
         <Stack.Screen
           name = 'homescreen'
           component={HomeScreen}
@@ -24,7 +25,8 @@ export default function App() {
         <Stack.Screen
           name = 'login'
           component={LoginScreen}
-        />
+        />*/}
+        
         <Stack.Screen
           name = 'chat'
           component={ChatScreen}
