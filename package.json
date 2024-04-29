@@ -12,6 +12,7 @@
     "@react-native-firebase/app": "^19.1.2",
     "@react-native-firebase/auth": "^19.1.2",
     "@react-navigation/native-stack": "^6.9.26",
+    "date-fns": "^3.6.0",
     "expo": "~50.0.14",
     "expo-status-bar": "~1.11.1",
     "firebase": "^10.11.1",

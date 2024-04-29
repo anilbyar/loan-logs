@@ -13,7 +13,6 @@ import { SettleTransaction } from './screens/SettleTransaction'
 import { SignUpScreen } from './screens/SignUpScreen'
 const Stack = createNativeStackNavigator();
 
-
 export default function App() {
   return (
     <NavigationContainer>
@@ -33,45 +32,33 @@ export default function App() {
         <Stack.Screen
           name = 'home'
           component={HomeScreen}
-          options={{headerShown:false}}
+          options={{ headerShown: false }}
         />
+        <Stack.Screen name="chat" component={ChatScreen} />
+        <Stack.Screen name="addtransaction" component={AddTransaction} />
+        <Stack.Screen name="addperson" component={AddPersonScreen} />
         <Stack.Screen
-          name = 'chat'
-          component={ChatScreen}
-        />
-        <Stack.Screen
-          name = 'addtransaction'
-          component={AddTransaction}
-        />
-        <Stack.Screen
-          name = 'addperson'
-          component={AddPersonScreen}
-        />
-        <Stack.Screen
-          name = 'transactiondetail'
+          name="transactiondetail"
           component={TransactionDetailScreen}
           options={{
-            title: 'Entry Details',
+            title: "Entry Details",
             headerStyle: {
-              backgroundColor: '#001eff',
+              backgroundColor: "#001eff",
             },
-            headerTintColor: '#fff',
+            headerTintColor: "#fff",
           }}
         />
-        <Stack.Screen
-          name = 'settleTransaction'
-          component={SettleTransaction}
-        />
+        <Stack.Screen name="settleTransaction" component={SettleTransaction} />
       </Stack.Navigator>
     </NavigationContainer>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
