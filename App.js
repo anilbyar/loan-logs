@@ -1,3 +1,4 @@
+import { auth } from './firebaseConfig'
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -8,8 +9,8 @@ import { LoginScreen } from './screens/LoginScreen';
 import { ChatScreen } from './screens/ChatScreen';
 import { AddPersonScreen } from './screens/AddPersonScreen';
 import { TransactionDetailScreen } from './screens/TransactionDetailScreen';
-import {SettleTransaction} from './screens/SettleTransaction'
-
+import { SettleTransaction } from './screens/SettleTransaction'
+import { SignUpScreen } from './screens/SignUpScreen'
 const Stack = createNativeStackNavigator();
 
 
@@ -18,9 +19,16 @@ export default function App() {
     <NavigationContainer>
       <Stack.Navigator
       >
+
         <Stack.Screen
           name = 'login'
           component={LoginScreen}
+          options={{headerShown: false}}
+          />
+        <Stack.Screen
+          name = 'signup'
+          component={SignUpScreen}
+          options={{headerShown: false}}
         />
         <Stack.Screen
           name = 'home'

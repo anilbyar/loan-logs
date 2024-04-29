@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Button, Text, View, StyleSheet, FlatList, TextInput, TouchableOpacity, TouchableHighlight } from 'react-native'
+import { Button, Text, View, StyleSheet, FlatList, TextInput, TouchableOpacity, TouchableHighlight, ToastAndroid } from 'react-native'
 import Icon from 'react-native-vector-icons/FontAwesome';
+import { auth } from '../firebaseConfig';
 
 
 const DATA = [
@@ -94,7 +95,7 @@ DATA.forEach((item) => {
   }
 })
 export const HomeScreen = ({navigation}) => {
-
+  ToastAndroid.show(auth.currentUser.email, ToastAndroid.SHORT, ToastAndroid.CENTER);
   return (
 
     <View style={styles.homePageScreen}>
