@@ -29,11 +29,7 @@ const UserList = [
     userName: 'Subham',
     phoneNumber: '12312321'
   },
-
-
 ]
-
-
 
 export const AddPersonScreen = ({ navigation }) => {
  const myUserId = 1
