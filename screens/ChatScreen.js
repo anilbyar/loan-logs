@@ -1,11 +1,15 @@
+import { collection, doc, getDoc, getDocs, query, Timestamp, where } from "firebase/firestore";
+import { useEffect, useState } from "react";
 import { View, Text, FlatList, StyleSheet, TouchableOpacity } from "react-native"
 import Icon from "react-native-vector-icons/dist/FontAwesome"
+import { db } from "../firebaseConfig";
+import { getUserName } from "../Utils";
 
-const netAmount= 1000;
+const netAmount = 1000;
 
-const myId = "atul11";
+const userId = "atul11";
 const idList = ["anil000", 'atul111'];
-const userNameList= ['anil', 'atul'];
+const userNameList = ['anil', 'atul'];
 
 const TRANSACTION_LIST = [
   {
@@ -100,14 +104,43 @@ const TRANSACTION_LIST = [
 ];
 
 
-export const ChatScreen = () => {
+export const ChatScreen = ({ route, navigation }) => {
   // const rupeeIcon = <Icon name="rupee" size={30} color="#900" />
+  const { userId, otherUserId, chatId } = route.params;
+  const [transactionList, setTransactionList] = useState(null);
+  console.log(userId, otherUserId);
+  useEffect(() => {
+    async function getTransactionList() {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'chats', chatId, 'transactions'));
+        const transactionList = [];
+        querySnapshot.forEach(async (doc) => {
+          console.log(doc.id, " => ", doc.data());
+          const transactionData = doc.data();
+          transactionData.addedByName = await getUserName(transactionData.addedBy);
+          transactionList.push(transactionData);
+        });
+        transactionList = await Promise.all(
+          transactionList.map(async (transaction) => {
+            transaction.addedByName = await getUserName(transaction.addedBy);
+            return transaction;
+          })
+        )
+        console.log("Transaction List: ", transactionList);
+        setTransactionList(transactionList);
+      } catch (e) {
+        console.log("Exception occured while fetching transaction list: ", e);
+      }
+    }
+    getTransactionList();
+  }, []);
+
   const Item = ({ transaction }) => (
 
-    <TouchableOpacity style={styles.mainContainer} onPress={()=>{alert('transaction detail page')}}>
+    <TouchableOpacity style={styles.mainContainer} onPress={() => { alert('transaction detail page') }}>
 
       <View style={styles.dateContainer}>
-        <Text style={styles.smallDate}>{transaction.tranDate}</Text>
+        <Text style={styles.smallDate}>{transaction.timedate.seconds}</Text>
       </View>
 
       <View style={styles.container}>
@@ -115,46 +148,25 @@ export const ChatScreen = () => {
         {/* container for who entered the transaction and about transaction */}
         <View style={styles.namePlusAbout}>
           {/* <View style={styles.userNameContainer}> */}
-            {transaction.whoInitiated ? (
-              <Text style={styles.userNameText}>{userNameList[0]}</Text>
-              ):(
-              <Text style={styles.userNameText}>{userNameList[1]}</Text>
-            )}
+            <Text style={styles.userNameText}>{transaction.addedByName}</Text>
           {/* </View> */}
-      
+
           <View style={styles.about}>
-            <Text>{transaction.aboutTran}</Text>
+            <Text>{transaction.description}</Text>
           </View>
         </View>
-    
+
         <View style={styles.youGaveContainer}>
           {/* use i gave container for user1 when (initiated by user1 through i gave) or (initiated by user2 and through i got) */}
-          {myId==idList[0] ?(
-            ((transaction.whoInitiated && transaction.initiationByGave) || ( !transaction.whoInitiated && !transaction.initiationByGave))&& (
-              <Text style={styles.youGaveText}>{transaction.tranAmt}</Text>
-              )
-              
-              ):(
-                ((!transaction.whoInitiated && transaction.initiationByGave) || ( transaction.whoInitiated && !transaction.initiationByGave))&& (
-                  <Text style={styles.youGaveText}>{transaction.tranAmt}</Text>
-                  )
-                  
-                  )}
+          {((userId === transaction.addedBy && transaction.transactionAmt<0) || (otherUserId === transaction.addedBy && transaction.transactionAmt>=0))&& (
+            <Text style={styles.youGaveText}>{Math.abs(transaction.transactionAmt)}</Text>)}
         </View>
-    
+
         <View style={styles.youGotContainer}>
           {/* use i got container for user1 when (initiated by user1 through i got) or (initiated by user2 and through i gave) */}
-          {myId==idList[0] ?(
-            ((transaction.whoInitiated && !transaction.initiationByGave) || ( !transaction.whoInitiated && transaction.initiationByGave))&& (
-              <Text style={styles.youGotText}>{transaction.tranAmt}</Text>
-            )
-
-            ):(
-            ((!transaction.whoInitiated && !transaction.initiationByGave) || ( transaction.whoInitiated && transaction.initiationByGave))&& (
-              <Text style={styles.youGotText}>{transaction.tranAmt}</Text>
-            )
-    
-          )}
+          {((userId === transaction.addedBy && transaction.transactionAmt>=0) || (otherUserId === transaction.addedBy && transaction.transactionAmt<0)) && (
+            <Text style={styles.youGotText}>{Math.abs(transaction.transactionAmt)}</Text>)
+          }
         </View>
 
       </View>
@@ -164,79 +176,79 @@ export const ChatScreen = () => {
 
 
   return (
-    <View style={{height:'100%'}}>
+    <View style={{ height: '100%' }}>
       {/* top description */}
-      
-      
+
+
 
       {/* you will get give  */}
-      
-      <View style={[styles.topContainer, {height:'12%'}]}> 
-        <View style={[styles.netAmountContainer, {height:'80%'}]}> 
+
+      <View style={[styles.topContainer, { height: '12%' }]}>
+        <View style={[styles.netAmountContainer, { height: '80%' }]}>
           {/* divisions for you will get or give, if +ve user1 get*/}
           <View>
-            {((netAmount>=0 && myId==idList[0]) || (netAmount<0 && myId==idList[1])) ?(
+            {((netAmount >= 0 && userId == otherUserId) || (netAmount < 0 && userId == idList[1])) ? (
               <Text style={styles.topContainerText}>You will get</Text>
-              ):( 
+            ) : (
               <Text style={styles.topContainerText}>You will give</Text>
             )}
           </View>
           <View>
-            {((netAmount>=0 && myId==idList[0]) || (netAmount<0 && myId==idList[1])) ?(
-              <Text style={[styles.topContainerText, {color:'green'}]}>{Math.abs(netAmount)}</Text>
-              ):( 
-              <Text style={[styles.topContainerText, {color:'red'}]}>{Math.abs(netAmount)}</Text>
+            {((netAmount >= 0 && userId == otherUserId) || (netAmount < 0 && userId == idList[1])) ? (
+              <Text style={[styles.topContainerText, { color: 'green' }]}>{Math.abs(netAmount)}</Text>
+            ) : (
+              <Text style={[styles.topContainerText, { color: 'red' }]}>{Math.abs(netAmount)}</Text>
             )}
           </View>
         </View>
       </View>
 
-      
-        
+
+
 
       {/* labelText for ledger */}
-      <View style={[styles.labelContainer, {height:'3%'},]}>
-        <View style={[{width:'50%'}]}><Text style={[styles.labelText]}>ENTRIES</Text></View>
-        <View style={[{width:'25%'}]}><Text style={[styles.labelText]}>YOU GAVE</Text></View>
-        <View style={[{width:'25%'}]}><Text style={[styles.labelText]}>YOU GOT</Text></View>
+      <View style={[styles.labelContainer, { height: '3%' },]}>
+        <View style={[{ width: '50%' }]}><Text style={[styles.labelText]}>ENTRIES</Text></View>
+        <View style={[{ width: '25%' }]}><Text style={[styles.labelText]}>YOU GAVE</Text></View>
+        <View style={[{ width: '25%' }]}><Text style={[styles.labelText]}>YOU GOT</Text></View>
 
       </View>
-        
 
-      
+
+
 
       {/* transactions */}
-      <View style={{height:'73%',}}>
-        
-      <FlatList
-        data={TRANSACTION_LIST}
-        renderItem={({item}) => <Item transaction={item} />}
-        keyExtractor={item => item.id}
-      />
+      <View style={{ height: '73%', }}>
+
+        <FlatList
+          data={transactionList}
+          renderItem={({ item }) => { return <Item transaction={item} /> }}
+          keyExtractor={item => item.transactionId}
+        />
 
       </View>
 
       {/* add transaction get give */}
       <View style={styles.enterTranContainer} >
-          <TouchableOpacity style= {[styles.button, {backgroundColor:'red'}]} onPress={()=>{alert('you gave page')}}>
-            <Text style={{
-              color: 'white',
-              textAlign: 'center',
-            }}> YOU GAVE</Text>
+        <TouchableOpacity style={[styles.button, { backgroundColor: 'red' }]} onPress={() => { alert('you gave page') }}>
+          <Text style={{
+            color: 'white',
+            textAlign: 'center',
+          }}> YOU GAVE</Text>
 
-          </TouchableOpacity>
-          <TouchableOpacity style= {[styles.button, {backgroundColor:'green'}]} onPress={()=>{alert('you got page')}}>
-            <Text style={{
-              color: 'white',
-              textAlign: 'center',
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.button, { backgroundColor: 'green' }]} onPress={() => { alert('you got page') }}>
+          <Text style={{
+            color: 'white',
+            textAlign: 'center',
 
-            }}> YOU GOT</Text>
+          }}> YOU GOT</Text>
 
-          </TouchableOpacity>
+        </TouchableOpacity>
       </View>
-        
 
-        
+
+
     </View>
   )
 }
@@ -244,7 +256,7 @@ export const ChatScreen = () => {
 
 
 const styles = StyleSheet.create({
-  topContainer:{
+  topContainer: {
     flexDirection: 'column',
     // marginVertical: 3,
     // borderWidth: 1,
@@ -252,33 +264,33 @@ const styles = StyleSheet.create({
     backgroundColor: 'blue',
 
   },
-  netAmountContainer:{
-    flexDirection:'row',
-    marginTop:10,
+  netAmountContainer: {
+    flexDirection: 'row',
+    marginTop: 10,
     alignContent: 'center',
     alignItems: 'center',
-    justifyContent:'space-around',
+    justifyContent: 'space-around',
     backgroundColor: 'white',
     width: '60%',
   },
-  topContainerText:{
+  topContainerText: {
     fontSize: 20,
     fontWeight: '700',
     textShadowColor: 'gray',
     elevation: 2,
-    
+
   },
   labelContainer: {
     flexDirection: 'row',
-    alignContent:'center',
+    alignContent: 'center',
     alignItems: 'center',
     // paddingHorizontal: 5, // Add padding for spacing
     // marginBottom: 10, // Add margin at the bottom for spacing
     // borderWidth:1,
   },
-  labelText:{
+  labelText: {
     fontSize: 10,
-    color: 'gray', 
+    color: 'gray',
     // borderWidth:1,
     // backgroundColor:'pink',
     textAlign: 'center',
@@ -294,9 +306,9 @@ const styles = StyleSheet.create({
     // height: '70%',
     // minHeight: 130, // Set minimum height to accommodate all items
   },
-  namePlusAbout:{
-    width:'50%',
-    
+  namePlusAbout: {
+    width: '50%',
+
   },
   dateContainer: {
     flexDirection: 'row',
@@ -328,11 +340,11 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-  
+
   },
   smallDate: {
     fontSize: 10,
-    fontWeight: 'normal' ,
+    fontWeight: 'normal',
     textAlign: 'center',
     // backgroundColor:'green',
     // borderWidth: 1,
@@ -341,18 +353,18 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     textAlign: 'left',
-    padding:0,
+    padding: 0,
     paddingLeft: 2,
     // paddingTop: 1,
     borderWidth: 1,
-    height:'30%',
+    height: '30%',
     justifyContent: 'center',
   },
   userNameText: {
     fontSize: 12,
     fontWeight: 'bold',
     textAlign: 'left',
-    paddingLeft:10,
+    paddingLeft: 10,
     // borderWidth: 1,
   },
   about: {
@@ -394,17 +406,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     paddingHorizontal: 5,
   },
-  enterTranContainer:{
+  enterTranContainer: {
     // borderWidth: 1,
     backgroundColor: 'white',
     flexDirection: 'row',
     justifyContent: 'space-around',
-    paddingVertical:10,
-    height:'15%',
+    paddingVertical: 10,
+    height: '15%',
 
   },
-  button:{
-    height:'60%',
+  button: {
+    height: '60%',
     width: '40%',
     justifyContent: 'center',
     paddingVertical: 10,

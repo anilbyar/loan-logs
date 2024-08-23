@@ -1,8 +1,10 @@
 import { auth, database } from '../firebaseConfig'
-import { createUserWithEmailAndPassword, deleteUser, signInWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, deleteUser, getAuth, sendEmailVerification, signInWithEmailAndPassword, updateCurrentUser, updateProfile } from 'firebase/auth';
 import { collection, doc, setDoc } from 'firebase/firestore';
-import { useCallback, useState } from 'react'
+import { useCallback, useContext, useState } from 'react'
 import { View, StyleSheet, TextInput, ToastAndroid, Pressable, Text, Image, TouchableOpacity } from 'react-native'
+import { setitem } from '../Utils';
+import { AuthDispatchContext } from '../components/AuthContext';
 
 
 export const SignUpScreen = ({navigation}) => {
@@ -13,38 +15,42 @@ export const SignUpScreen = ({navigation}) => {
   const [user, setUser] = useState(null);
 	const [uid, setUid] = useState('');
 
+  const authdispatch = useContext(AuthDispatchContext);
 
-  function registerUser() {
-		setBtnstate(true);
-    createUserWithEmailAndPassword(auth, email, password)
-		.then((userCredential) => {
-			// Signed up 
-				const currUser = userCredential.user;
-				setUser(currUser);
-				setUid(currUser.uid);
-				console.log("uid", currUser.uid);
-				console.log(5, currUser);
-				const ref = doc(database, 'users', currUser.uid);
-				const userRef = setDoc(ref, {
-					name: userName,
-					email: email,
-					chatIds: [],
-					userId: currUser.uid
-				})
-				ToastAndroid.show('Logged in as '+userName, ToastAndroid.LONG, ToastAndroid.CENTER);
-				navigation.navigate('home')
-				// ...
-			})
-      .catch((error) => {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-				if (errorCode=='auth/invalid-credential') ToastAndroid.show("Invalid email or password", ToastAndroid.LONG, ToastAndroid.CENTER);
-        else ToastAndroid.show(errorMessage, ToastAndroid.LONG, ToastAndroid.CENTER);
-        console.log(3, error);
-        // ..
+  const signUp = () => {
+    createUserWithEmailAndPassword(getAuth(), email, password)
+    .then((userCredential) => {
+      // Signed up 
+      setitem('auth', getAuth());
+      authdispatch({type:'SIGN_IN', auth: getAuth()});
+
+      // store name in firestore 
+      const currUser = userCredential.user;
+      setUser(currUser);
+      setUid(currUser.uid);
+      console.log("uid", currUser.uid);
+      console.log(5, currUser);
+      const ref = doc(database, 'users', currUser.uid);
+      const userRef = setDoc(ref, {
+        name: userName,
+        email: email,
+        chatIds: [],
+        userId: currUser.uid
+      })
+      updateProfile(getAuth().currentUser, {
+        displayName: userName
       });
-		setBtnstate(false);
-	}
+      ToastAndroid.show('Logged in as '+userName, ToastAndroid.LONG, ToastAndroid.CENTER);
+    })
+    .catch((error) => {
+      const errorCode = error.code;
+      const errorMessage = error.message;
+      if (errorCode=='auth/invalid-credential') ToastAndroid.show("Invalid email or password", ToastAndroid.LONG, ToastAndroid.CENTER);
+      else ToastAndroid.show(errorMessage, ToastAndroid.LONG, ToastAndroid.CENTER);
+      console.log(3, error);
+      // ..
+    });
+  }
   return (
 
     <View style={styles.container}>
@@ -66,7 +72,7 @@ export const SignUpScreen = ({navigation}) => {
           />
         <TextInput
           style = {[styles.input]}
-					editable = {!btnstate}
+          editable = {!btnstate}
           onChangeText={setemail}
           placeholder='Email'
           />
@@ -78,7 +84,7 @@ export const SignUpScreen = ({navigation}) => {
           placeholder='Password'
           />
         <TouchableOpacity style={[styles.button, ]} disabled={btnstate} onPress={() => {
-          registerUser();
+          signUp();
         }}>
           <Text>Register</Text>
         </TouchableOpacity>

@@ -1,7 +1,11 @@
-import { useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { Button, Text, View, StyleSheet, FlatList, TextInput, TouchableOpacity, TouchableHighlight, ToastAndroid } from 'react-native'
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { auth } from '../firebaseConfig';
+import { auth, db } from '../firebaseConfig';
+import { AuthContext, AuthDispatchContext } from '../components/AuthContext';
+import { doc, addDoc, getDoc, collection } from 'firebase/firestore';
+import { signOut } from 'firebase/auth';
+import { getOtherUserName, getUser } from '../Utils';
 
 
 const DATA = [
@@ -74,33 +78,83 @@ function giveUserName(userIds) {
   }
 }
 
-const Item = ({ userIds, amount }) => (
-  <TouchableOpacity style={styles.item} onPress={() => alert('touched')}>
-    <Text style={styles.title}>{giveUserName(userIds)}</Text>
-    <View style={{ marginRight: 7 }}>
-      <Text style={{}}>You will {amount > 0 ? "get" : "give"}</Text>
-      <Text style={ amount < 0 ? { color: 'red', textAlign:'center', fontWeight:'bold' } : { color: 'green', textAlign:'center', fontWeight:'bold' } }>{rupeeIcon}{Math.abs(amount)}</Text>
-    </View>
-
-  </TouchableOpacity>
-);
 var getAmount = 0;
 var giveAmount = 0;
-DATA.forEach((item) => {
-  if (item.Net_amount > 0) {
-    getAmount += item.Net_amount
+
+const getChats = async (user) => {
+  try {
+    const chatIds = user.chatIds;
+    console.log("ChatIds: ", chatIds);
+    // Use map to create an array of promises
+    const promises = chatIds.map(async (id) => {
+      const data = await getDoc(doc(db, 'chats', id));
+      const userName = await getOtherUserName(user.userId, data.data().userIds);
+      var result = data.data();
+      result.chatName = userName;
+      console.log("Name: ", userName);
+
+      return result; // Return the data to be collected later
+    });
+
+    // Use Promise.all to await all promises to resolve
+    const result = await Promise.all(promises);
+    
+    console.log("Result:", result);
+    return result;
+  } catch (e){
+    return [];
   }
-  else {
-    giveAmount += item.Net_amount
-  }
-})
+}
+
 export const HomeScreen = ({navigation}) => {
-  ToastAndroid.show(auth.currentUser.email, ToastAndroid.SHORT, ToastAndroid.CENTER);
+  const {auth} = useContext(AuthContext);
+  const authDispatch = useContext(AuthDispatchContext);
+  const userId = auth.currentUser.uid;
+  // console.log("Home Screen", auth);
+  // ToastAndroid.show(auth.currentUser.email, ToastAndroid.SHORT, ToastAndroid.CENTER);
+  
+  const [user, setUser] = useState(null);
+  const [chats, setChats] = useState(null);
+
+  const Item = ({ chat }) => (
+    <TouchableOpacity style={styles.item} onPress={() => navigation.navigate('chat', {
+      userId: userId, 
+      otherUserId: userId===chat.userIds[0]?chat.userIds[1]:chat.userIds[0],
+      chatId: chat.chatId
+    })}>
+      <Text style={styles.title}>{chat.chatName}</Text>
+      <View style={{ marginRight: 7 }}>
+        <Text style={{}}>You will {chat.netAmt > 0 ? "get" : "give"}</Text>
+        <Text style={{ color: chat.netAmt <= 0 ? 'red' : 'green', textAlign:'center', fontWeight:'bold' }}>{rupeeIcon}{Math.abs(chat.netAmt)}</Text>
+      </View>
+  
+    </TouchableOpacity>
+  );
+  
+  useEffect(() => {
+    async function getChatsHere() {
+      const tUser = await getUser(userId);
+      const tChats = await getChats(tUser);
+      giveAmount = getAmount = 0;
+      
+      tChats.forEach((chat) => {
+        if (chat.netAmt > 0) {
+          getAmount += chat.netAmt
+        }
+        else {
+          giveAmount += chat.netAmt
+        }
+      })
+      getAmount = getAmount.toFixed(2);
+      giveAmount = giveAmount.toFixed(2);
+      setUser(tUser);
+      setChats(tChats);
+    }
+    getChatsHere();
+  }, [userId]);
+
   return (
-
     <View style={styles.homePageScreen}>
-
-
       <View style={styles.bigContainer}>
         {/* <View style={styles.top_header}>
           <Text style={{ color: 'white',fontSize:20 }}>ANUKUL</Text>
@@ -122,36 +176,36 @@ export const HomeScreen = ({navigation}) => {
         <Text>{searchIcon}</Text>
         <TextInput style={{ height: 25, width: '90%', fontSize: 16, padding: 3 }} placeholder='Search your customer'></TextInput>
       </View>
+      
 
       <FlatList
-        data={DATA}
-        renderItem={({ item }) => <Item userIds={item.userIds} amount={item.Net_amount} />}
-        keyExtractor={item => item.chat_id}
+        data={chats}
+        renderItem={({ item }) => {
+          return <Item chat={item} />;
+        }}
+
+        keyExtractor={item => item.chatId}
         style={{height:'50%'}}
-      />
+      /> 
 
       <View style={{width:'100%',flex:1,flexDirection:'row',marginBottom:10, justifyContent:'space-evenly',alignItems:'center'}}>
         <TouchableOpacity style={{ width: '40%', backgroundColor: '#398EEA', height: 45, borderRadius: 10,padding:5 }}>
 
-          <Text style={{ padding: 5, textAlign: 'center', color: 'black' }} onPress={()=>navigation.navigate('settleTransaction')}>Settle Transactions</Text>
+        <Text style={{ padding: 5, textAlign: 'center', color: 'black'}}>Add Person</Text>
 
         </TouchableOpacity>
-        <TouchableOpacity style={{ width: '40%', backgroundColor: 'green', height: 45, borderRadius: 10,padding:5}} onPress={()=>navigation.navigate('addperson')}>
+        <TouchableOpacity style={{ width: '40%', backgroundColor: 'green', height: 45, borderRadius: 10,padding:5}} onPress={()=>{
+          // navigation.navigate('addperson');
+            signOut(auth);
+            authDispatch({type: 'SIGN_OUT'});
+          }}>
 
-          <Text style={{ padding: 5, textAlign: 'center', color: 'black'}}>Add Person</Text>
+          <Text style={{ padding: 5, textAlign: 'center', color: 'black'}}>LOG OUT</Text>
+          {/* <Text style={{ padding: 5, textAlign: 'center', color: 'black' }} onPress={()=>navigation.navigate('settleTransaction')}>Settle Transactions</Text> */}
 
         </TouchableOpacity>
       </View>
-
-
-
-
-
-
-
     </View>
-
-
   )
 }
 const styles = StyleSheet.create({

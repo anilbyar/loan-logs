@@ -1,70 +1,48 @@
-import { auth, database } from '../firebaseConfig'
 import { getAuth, sendPasswordResetEmail, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { collection, doc, getDoc } from 'firebase/firestore';
-import { useState } from 'react'
+import { useContext, useState } from 'react'
 import { View, StyleSheet, TextInput, Button, Pressable, Text, Image, TouchableOpacity, ToastAndroid, Modal, KeyboardAvoidingView, ScrollView } from 'react-native'
-
-const isRegistered = (number) => {
-  return false;
-}
-
+import { AuthContext, AuthDispatchContext } from '../components/AuthContext';
+import { setitem } from '../Utils';
 
 
 export const LoginScreen = ({navigation}) => {
+
+  console.log("Login Screen");
+
   const [number, setnumber] = useState('');
   const [btnstate, setBtnstate] = useState(false);
   const [email, setemail] = useState('');
   const [password, setpassword] = useState('');
   const [user, setUser] = useState(null);
   const [forgetPassword, setForgetPassword] = useState(false);
-  console.log(auth.currentUser);
 
 
-  async function getName(){
-    const userRef = doc(database, 'users', auth.currentUser.uid);
-    const docSnap = await getDoc(userRef);
-    if (docSnap.exists()){
-      const data = docSnap.data();
-      console.log("My data: ", data['name']);
-      return data['name'];
-    } else {
-      raise
-    }
-    return 'None';
-  }
+  const authdispatch = useContext(AuthDispatchContext);
 
   async function login(){
-    // disable btn
-    setBtnstate(true);
-
-    // signin
-    signInWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
-        // Signed in 
-        getName()
-          .then((name)=>{
-            ToastAndroid.show('Logged in as '+name, ToastAndroid.SHORT, ToastAndroid.CENTER);
-            navigation.navigate('home')
-          })
-          .catch((error)=> {
-            ToastAndroid.show(error.message, ToastAndroid.SHORT, ToastAndroid.CENTER);
-            signOut(auth)
-          })
-        // ...
+    console.log(getAuth(), email, password);
+    signInWithEmailAndPassword(getAuth(), email, password)
+      .then((userCred)=>{
+        authdispatch({type: 'SIGN_IN', auth: getAuth()});
+        setitem('auth', JSON.stringify(getAuth())).catch((error)=>{
+          console.log("storing login cred", error.message);
+        })
+        authdispatch({type: 'LOADING', isLoading: false});
       })
-      .catch((error) => {
+      .catch((error)=>{
         const errorCode = error.code;
         const errorMessage = error.message;
         if (errorCode=='auth/invalid-credential') ToastAndroid.show("Invalid email or password", ToastAndroid.SHORT, ToastAndroid.CENTER);
         else ToastAndroid.show(errorMessage, ToastAndroid.SHORT, ToastAndroid.CENTER);
         console.log(4, error);
-      });
-
+      })
+    console.log("curruser", getAuth().currentUser);
     // remove this after test
-    setBtnstate(false);
   }
+
   async function resetPassword(){
-    sendPasswordResetEmail(auth, email)
+    sendPasswordResetEmail(getAuth(), email)
       .then(()=> {
         ToastAndroid.show("Reset link sent to "+email, ToastAndroid.SHORT, ToastAndroid.CENTER);
       })
@@ -118,7 +96,7 @@ export const LoginScreen = ({navigation}) => {
           secureTextEntry={true}
           placeholder='Password'
           />
-        <TouchableOpacity style={[styles.button, ]} disabled={btnstate} onPress={() => {
+        <TouchableOpacity style={[styles.button, ]} onPress={() => {
           login();
         }}>
           <Text>Login</Text>
