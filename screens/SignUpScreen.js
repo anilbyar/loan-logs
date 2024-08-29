@@ -1,4 +1,4 @@
-import { auth, database } from '../firebaseConfig'
+import { auth, db } from '../firebaseConfig'
 import { createUserWithEmailAndPassword, deleteUser, getAuth, sendEmailVerification, signInWithEmailAndPassword, updateCurrentUser, updateProfile } from 'firebase/auth';
 import { collection, doc, setDoc } from 'firebase/firestore';
 import { useCallback, useContext, useState } from 'react'
@@ -21,7 +21,7 @@ export const SignUpScreen = ({navigation}) => {
     createUserWithEmailAndPassword(getAuth(), email, password)
     .then((userCredential) => {
       // Signed up 
-      setitem('auth', getAuth());
+      setitem('auth', JSON.stringify(getAuth()));
       authdispatch({type:'SIGN_IN', auth: getAuth()});
 
       // store name in firestore 
@@ -30,11 +30,12 @@ export const SignUpScreen = ({navigation}) => {
       setUid(currUser.uid);
       console.log("uid", currUser.uid);
       console.log(5, currUser);
-      const ref = doc(database, 'users', currUser.uid);
+      const ref = doc(db, 'users', currUser.uid);
       const userRef = setDoc(ref, {
         name: userName,
         email: email,
         chatIds: [],
+        isDummy: false,
         userId: currUser.uid
       })
       updateProfile(getAuth().currentUser, {

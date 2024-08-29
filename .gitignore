@@ -36,3 +36,7 @@ yarn-error.*
 
 # firebase config
 firebaseConfig.js
+
+*.prettierrc
+
+/android
