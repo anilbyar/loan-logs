@@ -16,7 +16,7 @@ import { auth, db } from "../firebaseConfig";
 import { AuthContext, AuthDispatchContext } from "../components/AuthContext";
 import { doc, addDoc, getDoc, collection } from "firebase/firestore";
 import { deleteitem, getitem, getOtherUserName, getUser, redGreen } from "../Utils";
-import { getAuth } from "firebase/auth";
+import { CustomProgressBar } from "../components/CustomProgressBar";
 
 const searchIcon = <Icon name="search" size={20} color="black" />;
 const rupeeIcon = <Icon name="rupee" size={15} color="black" />;
@@ -68,6 +68,8 @@ export const HomeScreen = ({ navigation }) => {
   const [customer, setCustomer] = useState("");
   const [allChats, setAllChats] = useState([]);
   const [chats, setChats] = useState([]);
+  const [inProgress, setInProgress] = useState(false);
+
 
   const Item = ({ chat }) => (
     <TouchableOpacity
@@ -102,9 +104,9 @@ export const HomeScreen = ({ navigation }) => {
       </View>
     </TouchableOpacity>
   );
-
   useFocusEffect(
     useCallback(() => {
+      setInProgress(true);
       async function getChatsHere() {
         const tUser = await getUser(userId);
         const tChats = await getChats(tUser);
@@ -119,6 +121,7 @@ export const HomeScreen = ({ navigation }) => {
         });
         getAmount = getAmount.toFixed(2);
         giveAmount = giveAmount.toFixed(2);
+        setInProgress(false);
         setAllChats(tChats);
         setChats(tChats);
       }
@@ -146,6 +149,7 @@ export const HomeScreen = ({ navigation }) => {
 
   return (
     <View style={styles.homePageScreen}>
+      <CustomProgressBar visible={inProgress}/>
       <View style={styles.bigContainer}>
         <View style={styles.container}>
           <View style={{ borderRightWidth: 1, width: "45%", padding: 2 }}>

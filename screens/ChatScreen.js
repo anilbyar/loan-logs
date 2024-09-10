@@ -34,6 +34,7 @@ import {
 } from "../Utils";
 import { StatusBar } from "expo-status-bar";
 import { ChatContext, ChatDispatchContext } from "../components/ChatContext";
+import { CustomProgressBar } from "../components/CustomProgressBar";
 
 export const ChatScreen = ({ route, navigation }) => {
   // const rupeeIcon = <Icon name="rupee" size={30} color="#900" />
@@ -41,9 +42,12 @@ export const ChatScreen = ({ route, navigation }) => {
   console.log(chat);
   const [chat, setChat] = useState(prevChat);
   const [transactionList, setTransactionList] = useState(null);
+  const [inProgress, setInProgress] = useState(false);
+
   console.log(userId, otherUserId);
 
   const deleteChat = () => {
+    setInProgress(true);
     const removeChatPromise = deleteDoc(doc(db, "chats", chat.chatId));
     const removeChatIdFromUser1 = updateDoc(
       doc(db, "users", chat.userIds[0]),
@@ -68,10 +72,12 @@ export const ChatScreen = ({ route, navigation }) => {
           ToastAndroid.CENTER,
           ToastAndroid.SHORT
         );
+        setInProgress(false);
         navigation.goBack();
       })
       .catch((e) => {
         ToastAndroid.show(e, ToastAndroid.CENTER, ToastAndroid.SHORT);
+        setInProgress(false);
       });
   };
 
@@ -102,6 +108,7 @@ export const ChatScreen = ({ route, navigation }) => {
 
   useFocusEffect(
     useCallback(() => {
+      setInProgress(true);
       async function getTransactionList() {
         try {
           const q = query(
@@ -137,9 +144,11 @@ export const ChatScreen = ({ route, navigation }) => {
             });
           }
           console.log("Transaction List: ", transactionList);
+          setInProgress(false);
           setTransactionList(transactionList);
         } catch (e) {
           console.log("Exception occured while fetching transaction list: ", e);
+          setInProgress(false);
         }
       }
       getTransactionList();
@@ -151,7 +160,7 @@ export const ChatScreen = ({ route, navigation }) => {
       style={styles.mainContainer}
       onPress={() => {
         navigation.navigate("transactiondetail", {
-          transaction: transaction,
+          prevTransaction: transaction,
           userId: userId,
           chat: chat,
         });
@@ -196,7 +205,8 @@ export const ChatScreen = ({ route, navigation }) => {
   );
 
   return (
-    <ChatContext.Provider value={chat}>
+    <View>
+      <CustomProgressBar visible={inProgress}/>
       <View style={{ height: "100%" }}>
         {/* top description */}
         {/* you will get/give  */}
@@ -304,7 +314,7 @@ export const ChatScreen = ({ route, navigation }) => {
           </TouchableOpacity>
         </View>
       </View>
-    </ChatContext.Provider>
+    </View>
   );
 };
 

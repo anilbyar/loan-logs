@@ -44,7 +44,6 @@ export const getUserName = async (userId) => {
 
 export const getOtherUserName = async (userId, userList) => {
   console.log("UserList: ", userId, userList);
-  console.assert(userId in userList);
   return userId === userList[0]
     ? await getUserName(userList[1])
     : await getUserName(userList[0]);

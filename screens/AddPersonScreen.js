@@ -23,6 +23,7 @@ import Icon from "react-native-vector-icons/FontAwesome";
 import { db } from "../firebaseConfig";
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../components/AuthContext";
+import { CustomProgressBar } from "../components/CustomProgressBar"
 
 const addChat = async (userId1, userId2) => {
   const ref = doc(collection(db, "chats"));
@@ -46,6 +47,7 @@ export const AddPersonScreen = ({ route, navigation }) => {
   const userId = auth.currentUser.uid;
   const [users, setUsers] = useState(null);
   const [dummyName, setDummyName] = useState("");
+  const [inProgress, setInProgress] = useState(false);
   const myUserId = 1;
   console.log("APS UserId: ", userId);
   const searchIcon = <Icon name="search" size={20} color="black" />;
@@ -79,6 +81,7 @@ export const AddPersonScreen = ({ route, navigation }) => {
 
   const addDummyUserHandler = () => {
     // TODO add logic
+    setInProgress(true);
     console.log("AddDummyUser dummyName: ", dummyName);
     const dummyUserCreator = async () => {
       const dummyUserRef = doc(collection(db, "users"));
@@ -94,6 +97,7 @@ export const AddPersonScreen = ({ route, navigation }) => {
         "Chat with " + dummyName + " created.",
         ToastAndroid.SHORT
       );
+      setInProgress(false);
       navigation.goBack();
     });
   };
@@ -126,6 +130,7 @@ export const AddPersonScreen = ({ route, navigation }) => {
       console.log(flag);
       return flag;
     };
+    setInProgress(true);
     var checkFlag = false;
     isChatValidToCreate(userId, user.userId).then((data) => {
       checkFlag = data;
@@ -135,6 +140,7 @@ export const AddPersonScreen = ({ route, navigation }) => {
           "Chat with " + user.name + " already exit",
           ToastAndroid.SHORT
         );
+        setInProgress(false);
         navigation.goBack();
       } else {
         addChat(userId, user.userId).then((newChatId) => {
@@ -143,6 +149,7 @@ export const AddPersonScreen = ({ route, navigation }) => {
             ToastAndroid.SHORT
           );
           console.log("ChatId: ", newChatId);
+          setInProgress(false);
           navigation.goBack();
         });
       }
@@ -223,6 +230,7 @@ export const AddPersonScreen = ({ route, navigation }) => {
   // user item ends here
   return (
     <View style={styles.addPersonScreen}>
+      <CustomProgressBar visible = {inProgress}/>
       {/* this is search box in addperson */}
       <View
         style={{

@@ -19,6 +19,7 @@ import Icon from "react-native-vector-icons/FontAwesome";
 import Ionicon from "react-native-vector-icons/Ionicons";
 import { db } from "../firebaseConfig";
 import { ChatContext } from "../components/ChatContext";
+import { CustomProgressBar } from "../components/CustomProgressBar";
 
 
 /*
@@ -31,7 +32,7 @@ wrt first user
 */
 export const AddTransaction = ({ route, navigation }) => {
   const { userId, chat, yougave, isEdit, transaction } = route.params;
-  
+
   const specialColor = yougave ? "red" : "green";
   const styles = createStyles(specialColor);
 
@@ -41,23 +42,32 @@ export const AddTransaction = ({ route, navigation }) => {
   const [desc, setDesc] = useState(transaction ? transaction.description : "");
   const [dateTime, setDateTime] = useState(transaction? transaction.timestamp.toDate():new Date());
   const [disableSubmit, setDisableSubmit] = useState(false);
+  const [inProgress, setInProgress] = useState(false);
 
   const onSubmit = async () => {
-    const newRefDoc = doc(collection(db, "chats", chat.chatId, "transactions"));
+    setInProgress(true);
+
+    var docRef;
+    if (transaction) {
+      docRef = doc(db, "chats", chat.chatId, "transactions", transaction.transactionId);
+    } else {
+      docRef = doc(collection(db, "chats", chat.chatId, "transactions"));
+    }
     const netAmount =
       (userId == chat.userIds[0] && !yougave) ||
       (userId == chat.userIds[1] && yougave)
         ? Number(amount)
         : -Number(amount);
-    console.log("Ref: ", newRefDoc);
-    await setDoc(newRefDoc, {
+    console.log("Ref: ", docRef);
+    await setDoc(docRef, {
       addedBy: userId,
       description: desc,
       timestamp: Timestamp.fromDate(dateTime),
       transactionAmt: netAmount,
-      transactionId: newRefDoc.id
+      transactionId: docRef.id
     }).then((res) => {
       setDisableSubmit(false);
+      setInProgress(false);
       navigation.goBack();
     });
   };
@@ -154,6 +164,7 @@ export const AddTransaction = ({ route, navigation }) => {
   return (
     //start
     <KeyboardAvoidingView style={styles.main}>
+      <CustomProgressBar visible={inProgress}/>
       {/* ADD AMOUNT */}
 
       <View style={styles.addAmountContainer}>

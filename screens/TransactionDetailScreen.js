@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Text,
   View,
@@ -10,25 +10,62 @@ import {
 } from "react-native";
 import AntDesign from "react-native-vector-icons/AntDesign";
 import Octicons from "react-native-vector-icons/Octicons";
-import { dateTimeStringFromTimestamp, redGreen } from "../Utils";
-import { deleteDoc, doc } from "firebase/firestore";
+import { dateTimeStringFromTimestamp, getUserName, redGreen } from "../Utils";
+import { deleteDoc, doc, getDoc } from "firebase/firestore";
 import { db } from "../firebaseConfig";
+import { CustomProgressBar } from "../components/CustomProgressBar";
+import { useFocusEffect } from "@react-navigation/native";
 
 export const TransactionDetailScreen = ({ route, navigation }) => {
-  const { userId, chat, transaction } = route.params;
+  const { userId, chat, prevTransaction } = route.params;
   const [modalVisible, setModalVisible] = useState(false);
-  const isEditDisabled = userId != transaction.addedBy;
+  const [inProgress, setInProgress] = useState(false);
+  const [transaction, setTransaction] = useState(prevTransaction);
+  
+  console.log("Transaction 5: ", transaction);
 
-  const onDelete = async () => {
-    await deleteDoc(doc(db, 'chats', chat.chatId, 'transactions', transaction.transactionId)).then(() => {
-      navigation.goBack();
-    }).catch((e)=> {
-      ToastAndroid.show(e);
-    });
-  }
+  const onDelete = () => {
+    setInProgress(true);
+    deleteDoc(
+      doc(db, "chats", chat.chatId, "transactions", transaction.transactionId)
+    )
+      .then(() => {
+        navigation.goBack();
+        setInProgress(false);
+      })
+      .catch((e) => {
+        ToastAndroid.show(e);
+      });
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      setInProgress(true);
+      const fetchTransaction = async() => {
+        const currentTransaction = (await getDoc(doc(db, 'chats', chat.chatId, 'transactions', transaction.transactionId))).data();
+        currentTransaction.addedByName = await getUserName(prevTransaction.addedBy);
+        return currentTransaction;
+      };
+      fetchTransaction().then((currentTransaction) => {
+        setTransaction(currentTransaction);
+        setInProgress(false);
+    })
+  }, []));
+
+  const onEditHandler = () => {
+    navigation.navigate("addtransaction", {
+      transaction: transaction,
+      userId: userId,
+      chat: chat,
+      isEdit: true,
+      yougave:
+        !redGreen(userId, chat.userIds, transaction.transactionAmt),
+    })
+  };
 
   return (
     <View style={{ height: "100%", width: "100%" }}>
+      <CustomProgressBar visible={inProgress} />
       <Modal
         animationType="fade"
         transparent={true}
@@ -165,12 +202,15 @@ export const TransactionDetailScreen = ({ route, navigation }) => {
                   fontWeight: "bold",
                   fontSize: 18,
                   alignSelf: "center",
-                  color:
-                    redGreen(userId, chat.userIds, transaction.transactionAmt)
+                  color: redGreen(
+                    userId,
+                    chat.userIds,
+                    transaction.transactionAmt
+                  )
                     ? "green"
                     : "red",
-                  }}
-                  >
+                }}
+              >
                 {Math.abs(transaction.transactionAmt)}
               </Text>
               <Text style={{ color: "grey", fontWeight: "400", fontSize: 13 }}>
@@ -214,17 +254,7 @@ export const TransactionDetailScreen = ({ route, navigation }) => {
                 flex: 1,
                 height: "90%",
               }}
-              onPress={() => navigation.navigate("addtransaction", {
-                transaction: transaction,
-                userId: userId,
-                chat: chat,
-                isEdit: true,
-                yougave:
-                  (userId === chat.userIds[0] &&
-                    transaction.transactionAmt < 0) ||
-                  (userId === chat.userIds[1] &&
-                    transaction.transactionAmt >= 0),
-              })}
+              onPress={onEditHandler}
             >
               <AntDesign name="edit" color="black" size={20} />
               <Text

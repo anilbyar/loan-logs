@@ -4,6 +4,7 @@ import { useContext, useState } from 'react'
 import { View, StyleSheet, TextInput, Button, Pressable, Text, Image, TouchableOpacity, ToastAndroid, Modal, KeyboardAvoidingView, ScrollView } from 'react-native'
 import { AuthContext, AuthDispatchContext } from '../components/AuthContext';
 import { setitem } from '../Utils';
+import { CustomProgressBar } from '../components/CustomProgressBar';
 
 
 export const LoginScreen = ({navigation}) => {
@@ -16,40 +17,47 @@ export const LoginScreen = ({navigation}) => {
   const [password, setpassword] = useState('');
   const [user, setUser] = useState(null);
   const [forgetPassword, setForgetPassword] = useState(false);
+  const [inProgress, setInProgress] = useState(false);
 
 
   const authdispatch = useContext(AuthDispatchContext);
 
   async function login(){
+    setInProgress(true);
     console.log(getAuth(), email, password);
     signInWithEmailAndPassword(getAuth(), email, password)
-      .then((userCred)=>{
-        authdispatch({type: 'SIGN_IN', auth: getAuth()});
-        setitem('auth', JSON.stringify(getAuth())).catch((error)=>{
-          console.log("storing login cred", error.message);
-        })
-        authdispatch({type: 'LOADING', isLoading: false});
+    .then((userCred)=>{
+      authdispatch({type: 'SIGN_IN', auth: getAuth()});
+      setitem('auth', JSON.stringify(getAuth())).catch((error)=>{
+        console.log("storing login cred", error.message);
       })
+      setInProgress(false);
+      authdispatch({type: 'LOADING', isLoading: false});
+    })
       .catch((error)=>{
         const errorCode = error.code;
         const errorMessage = error.message;
         if (errorCode=='auth/invalid-credential') ToastAndroid.show("Invalid email or password", ToastAndroid.SHORT, ToastAndroid.CENTER);
         else ToastAndroid.show(errorMessage, ToastAndroid.SHORT, ToastAndroid.CENTER);
         console.log(4, error);
+        setInProgress(false);
       })
     console.log("curruser", getAuth().currentUser);
     // remove this after test
   }
 
   async function resetPassword(){
+    setInProgress(true);
     sendPasswordResetEmail(getAuth(), email)
       .then(()=> {
         ToastAndroid.show("Reset link sent to "+email, ToastAndroid.SHORT, ToastAndroid.CENTER);
+        setInProgress(false);
       })
   }
 
   return (
     <KeyboardAvoidingView behavior='padding' style={[styles.container, {paddingVertical: 0, }]}>
+      <CustomProgressBar visible={inProgress}/>
       <Modal
         animationType="fade"
         transparent={true}
